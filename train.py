@@ -193,7 +193,7 @@ def read_prompts(
 
 def main():
     seed = 42
-    wandb_project = None  # "tiny_grpo"
+    wandb_project = "tiny_grpo"
     device_index = 0
     model_name = "meta-llama/Llama-3.2-1B-Instruct"
     checkpoint_path = Path("./output")
