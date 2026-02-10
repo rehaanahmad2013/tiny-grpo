@@ -192,16 +192,16 @@ def read_prompts(
 
 
 def main():
-    seed = 42
+    seed = 4
     wandb_project = "tiny_grpo"
     device_index = 0
     model_name = "meta-llama/Llama-3.2-1B-Instruct"
     checkpoint_path = Path("./output")
-    checkpoint_interval = 20
+    checkpoint_interval = 10
     train_batch_size = 16
-    lr = 5e-6
-    kl_weight = 0.01
-    clip_eps = 0.2
+    lr = 1e-6
+    kl_weight = 0.013
+    clip_eps = 0.222
 
     group_size = 12
     rollouts_per_step = 32
