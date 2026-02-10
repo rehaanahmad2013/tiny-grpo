@@ -198,9 +198,9 @@ def main():
     model_name = "meta-llama/Llama-3.2-1B-Instruct"
     checkpoint_path = Path("./output")
     checkpoint_interval = 20
-    train_batch_size = 16
+    train_batch_size = 4
     lr = 5e-6
-    kl_weight = 0.01
+    kl_weight = 0
     clip_eps = 0.2
 
     group_size = 12
