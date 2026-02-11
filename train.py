@@ -199,9 +199,9 @@ def main():
     checkpoint_path = Path("./output")
     checkpoint_interval = 20
     train_batch_size = 16
-    lr = 5e-6
-    kl_weight = 0.01
-    clip_eps = 0.2
+    lr = 1e-6
+    kl_weight = 0.02
+    clip_eps = 0.4
 
     group_size = 12
     rollouts_per_step = 32
