@@ -13,8 +13,8 @@ def approx_kl_divergence(
     """
     Monte-Carlo approximation of KL divergence, k3 estimator, see: http://joschu.net/blog/kl-approx.html
     """
-    print(f"log_probs: {log_probs}")
-    print(f"log_probs_ref: {log_probs_ref}")
+    print(f"log_probs: {log_probs}, dim: {log_probs.shape}")
+    print(f"log_probs_ref: {log_probs_ref}, dim: {log_probs_ref.shape}")
 
     log_ratio = log_probs_ref.float() - log_probs.float()
     if action_mask is not None:
