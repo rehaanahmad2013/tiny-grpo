@@ -16,7 +16,7 @@ from transformers import (
     LlamaForCausalLM,
     GenerationConfig,
 )
-from loss import approx_kl_divergence, GRPOLoss
+from loss import approx_kl_divergence, GRPOLoss, MaxRLLoss
 from replay_buffer import ReplayBuffer, Experience, join_experience_batch
 
 
@@ -139,7 +139,18 @@ def init_rng(seed: int) -> torch.Generator:
 
 
 def group_advantages(returns: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
+    """GRPO advantage: normalize by std"""
     return (returns - returns.mean()) / (returns.std() + eps)
+
+
+def maxrl_advantages(returns: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
+    """MaxRL advantage: normalize by mean (key difference!)"""
+    mean_return = returns.mean()
+    if mean_return > eps:
+        return (returns - mean_return) / (mean_return + eps)
+    else:
+        # If mean is too small, return zeros (no gradient)
+        return torch.zeros_like(returns)
 
 
 def sequence_log_probs_from_logits(
@@ -202,6 +213,9 @@ def main():
     lr = 5e-6
     kl_weight = 0.01
     clip_eps = 0.2
+    
+    # MaxRL vs GRPO toggle
+    use_maxrl = True  # Set to False for GRPO
 
     group_size = 12
     rollouts_per_step = 32
@@ -245,12 +259,25 @@ def main():
     )
 
     replay_buffer = ReplayBuffer()
-    objective = GRPOLoss(clip_eps=clip_eps, kl_weight=kl_weight)
+    
+    # Select loss function based on use_maxrl flag
+    if use_maxrl:
+        objective = MaxRLLoss(clip_eps=clip_eps, kl_weight=kl_weight)
+        print("Using MaxRL loss function")
+    else:
+        objective = GRPOLoss(clip_eps=clip_eps, kl_weight=kl_weight)
+        print("Using GRPO loss function")
 
     if wandb_project is None:
         wandb.init(mode="disabled")
     else:
-        wandb.init(project=wandb_project)
+        wandb.init(project=wandb_project, config={
+            "use_maxrl": use_maxrl,
+            "lr": lr,
+            "kl_weight": kl_weight,
+            "clip_eps": clip_eps,
+            "group_size": group_size,
+        })
 
     for k, prompt_batch in enumerate(prompt_loader):
         rollout_returns = []
@@ -278,7 +305,12 @@ def main():
                 )
                 rollout_returns.append(returns.cpu())
 
-                advantages = group_advantages(returns)
+                # Use MaxRL or GRPO advantages based on flag
+                if use_maxrl:
+                    advantages = maxrl_advantages(returns)
+                else:
+                    advantages = group_advantages(returns)
+                    
                 attention_mask = sequence_ids != pad_token_id
 
                 log_probs = sequences_log_probs(
