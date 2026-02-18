@@ -123,10 +123,10 @@ def rollout(
         if answer is not None:
             if answer == oracle_answer:
                 reward = 1.0
-            elif oracle_answer in answer:
-                reward = 0.5
-            else:
-                reward = 0.01
+            # elif oracle_answer in answer:
+            #     reward = 0.5
+            # else:
+            #     reward = 0.01
 
         returns[i] = reward
 
