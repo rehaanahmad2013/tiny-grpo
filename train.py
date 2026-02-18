@@ -16,7 +16,7 @@ from transformers import (
     LlamaForCausalLM,
     GenerationConfig,
 )
-from loss import approx_kl_divergence, GRPOLoss, MaxRLLoss
+from loss import approx_kl_divergence, GRPOLoss
 from replay_buffer import ReplayBuffer, Experience, join_experience_batch
 
 
@@ -123,10 +123,10 @@ def rollout(
         if answer is not None:
             if answer == oracle_answer:
                 reward = 1.0
-            elif oracle_answer in answer:
-                reward = 0.5
-            else:
-                reward = 0.01
+            # elif oracle_answer in answer:
+            #     reward = 0.5
+            # else:
+            #     reward = 0.01
 
         returns[i] = reward
 
@@ -260,13 +260,8 @@ def main():
 
     replay_buffer = ReplayBuffer()
     
-    # Select loss function based on use_maxrl flag
-    if use_maxrl:
-        objective = MaxRLLoss(clip_eps=clip_eps, kl_weight=kl_weight)
-        print("Using MaxRL loss function")
-    else:
-        objective = GRPOLoss(clip_eps=clip_eps, kl_weight=kl_weight)
-        print("Using GRPO loss function")
+    objective = GRPOLoss(clip_eps=clip_eps, kl_weight=kl_weight)
+    print("Using GRPO loss function")
 
     if wandb_project is None:
         wandb.init(mode="disabled")
