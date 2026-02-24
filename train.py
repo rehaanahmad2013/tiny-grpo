@@ -311,8 +311,9 @@ def main():
 
         torch.cuda.empty_cache()
         episode_return_sum = torch.stack(rollout_returns).sum()
-        print(f"returns of step {k}: {episode_return_sum:.4f}")
-        wandb.log({"returns": episode_return_sum})
+        episode_return_mean = episode_return_sum / (group_size * rollouts_per_step)
+        print(f"returns of step {k}: {episode_return_sum:.4f} (mean: {episode_return_mean:.4f})")
+        wandb.log({"returns": episode_return_mean})
 
         experience_sampler = DataLoader(
             replay_buffer,
