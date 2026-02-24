@@ -12,8 +12,8 @@ from torch.nn.utils import clip_grad_norm_
 from torch.utils.data import DataLoader
 from transformers import (
     AutoTokenizer,
+    AutoModelForCausalLM,
     PreTrainedTokenizer,
-    LlamaForCausalLM,
     GenerationConfig,
 )
 from loss import approx_kl_divergence, GRPOLoss
@@ -25,10 +25,10 @@ def load_model(
     trust_remote_code: bool = False,
     bf16: bool = True,
     device_map=None,
-) -> tuple[LlamaForCausalLM, PreTrainedTokenizer]:
+) -> tuple[AutoModelForCausalLM, PreTrainedTokenizer]:
     tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
     tokenizer.pad_token = tokenizer.eos_token
-    model = LlamaForCausalLM.from_pretrained(
+    model = AutoModelForCausalLM.from_pretrained(
         model_name_or_path,
         trust_remote_code=trust_remote_code,
         attn_implementation="flash_attention_2",
@@ -47,7 +47,7 @@ The assistant first thinks about the reasoning process in the mind and then prov
 
 @torch.no_grad()
 def rollout(
-    model: LlamaForCausalLM,
+    model: AutoModelForCausalLM,
     tokenizer: PreTrainedTokenizer,
     task: str,
     oracle_answer: str,
@@ -150,7 +150,7 @@ def sequence_log_probs_from_logits(
 
 
 def sequences_log_probs(
-    model: LlamaForCausalLM,
+    model: AutoModelForCausalLM,
     sequence_ids: torch.Tensor,
     attention_mask: torch.Tensor,
 ) -> torch.Tensor:
