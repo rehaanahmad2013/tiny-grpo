@@ -195,7 +195,7 @@ def main():
     seed = 42
     wandb_project = "tiny_grpo"
     device_index = 0
-    model_name = "meta-llama/Llama-3.2-1B-Instruct"
+    model_name = "Qwen/Qwen2.5-0.5B-Instruct"
     checkpoint_path = Path("./output")
     checkpoint_interval = 20
     train_batch_size = 16
