@@ -217,7 +217,7 @@ def main():
     # MaxRL vs GRPO toggle
     use_maxrl = True  # Set to False for GRPO
 
-    group_size = 24
+    group_size = 12
     rollouts_per_step = 32
     epochs_per_step = 1
     max_norm = 1.0  # gradient clipping
