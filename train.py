@@ -142,6 +142,14 @@ def group_advantages(returns: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
     return (returns - returns.mean()) / (returns.std() + eps)
 
 
+def maxrl_advantages(returns: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
+    mean_return = returns.mean()
+    if mean_return > eps:
+        return (returns - mean_return) / (mean_return + eps)
+    else:
+        return torch.zeros_like(returns)
+
+
 def sequence_log_probs_from_logits(
     logits: torch.tensor, output_ids: torch.tensor
 ) -> torch.Tensor:
@@ -213,6 +221,7 @@ def main():
     rollouts_per_step = 32
     epochs_per_step = 1
     max_norm = 1.0  # gradient clipping
+    use_maxrl = True  # use MaxRL-style advantages instead of GRPO
 
     # rollout params
     max_length = 1024
@@ -284,7 +293,7 @@ def main():
                 )
                 rollout_returns.append(returns.cpu())
 
-                advantages = group_advantages(returns)
+                advantages = maxrl_advantages(returns) if use_maxrl else group_advantages(returns)
                 attention_mask = sequence_ids != pad_token_id
 
                 log_probs = sequences_log_probs(
