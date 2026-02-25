@@ -153,7 +153,6 @@ def sequences_log_probs(
     model: AutoModelForCausalLM,
     sequence_ids: torch.Tensor,
     attention_mask: torch.Tensor,
-    return_entropy: bool = False,
 ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
     position_ids = attention_mask.long().cumsum(dim=-1) - 1
     position_ids.masked_fill_(mask=(attention_mask == 0), value=1)
@@ -168,11 +167,7 @@ def sequences_log_probs(
         logits=logits,
         output_ids=sequence_ids[:, 1:],
     )
-    if return_entropy:
-        probs = F.softmax(logits, dim=-1)
-        log_p = F.log_softmax(logits, dim=-1)
-        entropy = -(probs * log_p).sum(dim=-1)  # [batch, seq_len]
-        return log_probs, entropy
+
     return log_probs
 
 
@@ -206,10 +201,10 @@ def main():
     checkpoint_interval = 20
     train_batch_size = 16
     lr = 5e-6
-    kl_weight = 0
+    kl_weight = 0.01
     clip_eps = 0.2
 
-    group_size = 12
+    group_size = 24
     rollouts_per_step = 32
     epochs_per_step = 1
     max_norm = 1.0  # gradient clipping
@@ -339,13 +334,9 @@ def main():
 
                 optimizer.zero_grad()
 
-                log_probs, token_entropy = sequences_log_probs(
+                log_probs = sequences_log_probs(
                     model, sequence_ids=exp.sequences, attention_mask=exp.attention_mask,
-                    return_entropy=True,
                 )
-
-                # mean entropy over action (generated) tokens only
-                policy_entropy = (token_entropy * exp.action_mask).sum() / exp.action_mask.sum()
 
                 loss, kl = objective(log_probs=log_probs, experience=exp)
 
@@ -356,8 +347,8 @@ def main():
 
                 loss.backward()
                 grad_norm = clip_grad_norm_(model.parameters(), max_norm=max_norm)
-                print(f"{step_epoch}: kl={kl: .4f}, grad_norm={grad_norm: .4f}, entropy={policy_entropy:.4f}")
-                wandb.log({"kl": kl, "grad_norm": grad_norm, "policy_entropy": policy_entropy.item()})
+                print(f"{step_epoch}: kl={kl: .4f}, grad_norm={grad_norm: .4f}")
+                wandb.log({"kl": kl, "grad_norm": grad_norm})
 
                 optimizer.step()
 
