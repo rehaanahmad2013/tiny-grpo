@@ -206,7 +206,7 @@ def main():
     checkpoint_interval = 20
     train_batch_size = 16
     lr = 5e-6
-    kl_weight = 0.01
+    kl_weight = 0
     clip_eps = 0.2
 
     group_size = 12
