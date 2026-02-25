@@ -12,7 +12,7 @@ from torch.nn.utils import clip_grad_norm_
 from torch.utils.data import DataLoader
 from transformers import (
     AutoTokenizer,
-    AutoModelForCausalLM,
+    LlamaForCausalLM,
     PreTrainedTokenizer,
     GenerationConfig,
 )
@@ -25,10 +25,10 @@ def load_model(
     trust_remote_code: bool = False,
     bf16: bool = True,
     device_map=None,
-) -> tuple[AutoModelForCausalLM, PreTrainedTokenizer]:
+) -> tuple[LlamaForCausalLM, PreTrainedTokenizer]:
     tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
     tokenizer.pad_token = tokenizer.eos_token
-    model = AutoModelForCausalLM.from_pretrained(
+    model = LlamaForCausalLM.from_pretrained(
         model_name_or_path,
         trust_remote_code=trust_remote_code,
         attn_implementation="flash_attention_2",
@@ -47,7 +47,7 @@ The assistant first thinks about the reasoning process in the mind and then prov
 
 @torch.no_grad()
 def rollout(
-    model: AutoModelForCausalLM,
+    model: LlamaForCausalLM,
     tokenizer: PreTrainedTokenizer,
     task: str,
     oracle_answer: str,
@@ -150,7 +150,7 @@ def sequence_log_probs_from_logits(
 
 
 def sequences_log_probs(
-    model: AutoModelForCausalLM,
+    model: LlamaForCausalLM,
     sequence_ids: torch.Tensor,
     attention_mask: torch.Tensor,
     return_entropy: bool = False,
@@ -201,7 +201,7 @@ def main():
     seed = 42
     wandb_project = "tiny_grpo"
     device_index = 0
-    model_name = "Qwen/Qwen2.5-0.5B-Instruct"
+    model_name = "meta-llama/Llama-3.2-1B-Instruct"
     checkpoint_path = Path("./output")
     checkpoint_interval = 20
     train_batch_size = 16
