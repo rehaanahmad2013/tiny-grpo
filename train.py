@@ -206,7 +206,7 @@ def main():
 
     group_size = 24
     rollouts_per_step = 32
-    epochs_per_step = 1
+    epochs_per_step = 2
     max_norm = 1.0  # gradient clipping
 
     # rollout params
